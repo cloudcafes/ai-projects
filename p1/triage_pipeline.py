@@ -1,5 +1,6 @@
 import os
 import json
+from langfuse.decorators import observe # 1. Import decorator
 from langfuse import Langfuse
 from langchain_aws import ChatBedrock
 from langchain_core.prompts import ChatPromptTemplate
@@ -21,28 +22,27 @@ llm = ChatBedrock(
     }
 )
 
+
+# Initialize global Langfuse client
+langfuse = Langfuse()
+
+# 2. Use @observe to automatically trace the entire function call
+@observe(name="Support-Ticket-Triage")
 def run_triage(ticket_text: str, kb_context: str):
-    # 3. Governance: Fetch the production prompt dynamically
+    # Governance: Fetch the production prompt
     prompt_obj = langfuse.get_prompt("ticket_triage_agent", label="production")
     
-    # Convert Langfuse prompt to LangChain format
     langchain_prompt = ChatPromptTemplate.from_template(prompt_obj.get_langchain_prompt())
-    
-    # 4. Create the Chain (Prompt -> LLM -> String Output)
     chain = langchain_prompt | llm | StrOutputParser()
     
-    # 5. Execute with Tracing
-    # The trace logs latency, token usage, and generation steps
-    trace = langfuse.trace(
-        name="Support-Ticket-Triage",
-        user_id="internal-system",
-        metadata={"environment": "production"}
-    )
+    # 3. Simply invoke the chain; the callback is handled by the decorator context
+    # Note: Ensure you still pass the config to capture sub-steps (LLM calls)
+    from langfuse.callback import CallbackHandler
+    handler = CallbackHandler()
     
-    print("Executing LLM chain...")
     response = chain.invoke(
         {"context": kb_context, "ticket": ticket_text},
-        config={"callbacks": [trace.get_langchain_handler()]}
+        config={"callbacks": [handler]}
     )
     
     return response
