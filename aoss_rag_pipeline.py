@@ -13,7 +13,7 @@ from langchain_core.output_parsers import JsonOutputParser
 # 1. PLATFORM CONFIGURATION
 # ==========================================
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
-OPENSEARCH_URL = "https://YOUR-COLLECTION-ID.us-east-1.aoss.amazonaws.com" # UPDATE THIS
+OPENSEARCH_URL = "https://bn963daglfxj6n8waavi.us-east-1.aoss.amazonaws.com" # UPDATE THIS
 
 # Initialize Amazon Nova Embeddings
 embeddings_model = BedrockEmbeddings(
