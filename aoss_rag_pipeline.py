@@ -10,6 +10,10 @@ from langchain_community.vectorstores import OpenSearchVectorSearch
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 
+os.environ["LANGFUSE_PUBLIC_KEY"] = "pk-lf-a9ce6777-e19a-4938-a7a0-e0672140feed"
+os.environ["LANGFUSE_SECRET_KEY"] = "sk-lf-4835880d-567a-42e1-8e75-076a5020afc6"
+os.environ["LANGFUSE_HOST"] = "https://jp.cloud.langfuse.com"
+
 # ==========================================
 # 1. PLATFORM CONFIGURATION
 # ==========================================
