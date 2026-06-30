@@ -1,0 +1,11 @@
+{
+  "Rules": [
+    {
+      "ResourceType": "collection",
+      "Resource": [
+        "collection/it-playbooks"
+      ]
+    }
+  ],
+  "AWSOwnedKey": true
+}

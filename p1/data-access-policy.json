@@ -1,0 +1,27 @@
+[
+  {
+    "Rules": [
+      {
+        "ResourceType": "collection",
+        "Resource": [
+          "collection/it-playbooks"
+        ],
+        "Permission": [
+          "aoss:*"
+        ]
+      },
+      {
+        "ResourceType": "index",
+        "Resource": [
+          "index/it-playbooks/*"
+        ],
+        "Permission": [
+          "aoss:*"
+        ]
+      }
+    ],
+    "Principal": [
+      "arn:aws:iam::151963020193:role/AIPlatformRole"
+    ]
+  }
+]
