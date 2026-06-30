@@ -1,10 +1,11 @@
 import os
 import json
-from langfuse.decorators import observe # 1. Import decorator
+from langfuse.decorators import observe 
 from langfuse import Langfuse
 from langchain_aws import ChatBedrock
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
+from langfuse.callback import CallbackHandler
 
 # 1. Initialize Observability and Prompt Registry
 langfuse = Langfuse()
