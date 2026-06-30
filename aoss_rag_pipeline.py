@@ -24,7 +24,7 @@ embeddings_model = BedrockEmbeddings(
 
 # Initialize Claude 4.5 Haiku (Cross-Region Profile)
 llm = ChatBedrock(
-    model_id="us.anthropic.claude-haiku-4-5-20251001-v1:0",
+    model_id="us.amazon.nova-micro-v1:0",
     model_kwargs={"max_tokens": 1024, "temperature": 0.1}
 )
 
