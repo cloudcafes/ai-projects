@@ -5,7 +5,8 @@ from opensearchpy import RequestsHttpConnection, AWSV4SignerAuth
 from langfuse import Langfuse, observe
 from langfuse.langchain import CallbackHandler
 from langchain_aws import ChatBedrock, BedrockEmbeddings
-from langchain_community.vectorstores import OpenSearchVectorSearch
+# Notice the updated import path to remove the DeprecationWarning
+from langchain_opensearch import OpenSearchVectorSearch
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 
@@ -13,7 +14,8 @@ from langchain_core.output_parsers import JsonOutputParser
 # 1. PLATFORM CONFIGURATION
 # ==========================================
 AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
-OPENSEARCH_URL = "https://bn963daglfxj6n8waavi.us-east-1.aoss.amazonaws.com" # UPDATE THIS
+# Using the exact endpoint from your AWS environment
+OPENSEARCH_URL = "https://bn963daglfxj6n8waavi.us-east-1.aoss.amazonaws.com"
 
 # Initialize Amazon Nova Embeddings
 embeddings_model = BedrockEmbeddings(
@@ -38,6 +40,10 @@ def get_opensearch_auth():
     return auth
 
 def get_vector_store():
+    # Sanity check: Ensure Python is actually using the ai-platform-dev user
+    sts = boto3.client('sts')
+    print(f"[Platform Auth] Executing as: {sts.get_caller_identity()['Arn']}")
+    
     return OpenSearchVectorSearch(
         opensearch_url=OPENSEARCH_URL,
         index_name="it-triage-playbooks",
@@ -46,7 +52,8 @@ def get_vector_store():
         timeout=30,
         use_ssl=True,
         verify_certs=True,
-        connection_class=RequestsHttpConnection
+        connection_class=RequestsHttpConnection,
+        is_aoss=True  # <--- CRITICAL FIX: Tells LangChain not to send cluster-management commands
     )
 
 # ==========================================
@@ -57,7 +64,7 @@ def run_dynamic_triage(ticket_text: str):
     handler = CallbackHandler()
     vector_store = get_vector_store()
     
-    print(f"1. Vectorizing user ticket and searching AOSS...")
+    print(f"\n1. Vectorizing user ticket and searching AOSS...")
     # k=2 means we only return the top 2 most mathematically relevant playbooks
     docs = vector_store.similarity_search(ticket_text, k=2)
     retrieved_context = "\n".join([doc.page_content for doc in docs])
@@ -68,7 +75,7 @@ def run_dynamic_triage(ticket_text: str):
     prompt_obj = langfuse.get_prompt("ticket_triage_agent", label="production")
     langchain_prompt = ChatPromptTemplate.from_template(prompt_obj.get_langchain_prompt())
     
-    # Notice we are using JsonOutputParser now to strip out the <thinking> tags
+    # Notice we are using JsonOutputParser to safely strip out the <thinking> tags
     chain = langchain_prompt | llm | JsonOutputParser()
     
     print("3. Executing grounded LLM generation...")
@@ -86,7 +93,6 @@ if __name__ == "__main__":
     print("--- Enterprise AI Platform RAG Engine ---\n")
     
     # --- PHASE 1: INGESTION ---
-    # In production, this happens asynchronously when playbooks are updated in Git
     print("Ingesting data to OpenSearch Serverless...")
     playbooks = [
         "VPN connectivity issues from outside the US are currently blocked due to a firewall upgrade. Severity: High. Category: Network.",
@@ -94,8 +100,14 @@ if __name__ == "__main__":
         "AWS Console access denied errors should be routed to CloudOps with the IAM user ARN. Severity: Medium. Category: Cloud infrastructure.",
         "Blue screen of death on Windows 11 after the recent CrowdStrike update requires safe mode boot. Severity: Critical. Category: Hardware."
     ]
-    vector_store = get_vector_store()
-    vector_store.add_texts(playbooks) # Converts text to vectors and pushes to AOSS
+    
+    try:
+        vector_store = get_vector_store()
+        vector_store.add_texts(playbooks) # Converts text to vectors and pushes to AOSS
+        print("Ingestion successful.")
+    except Exception as e:
+        print(f"Failed to ingest data: {e}")
+        exit(1)
     
     # --- PHASE 2: INFERENCE ---
     customer_ticket = "I am at a conference in London and my VPN keeps dropping. I can't access any internal sales dashboards."
