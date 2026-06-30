@@ -8,7 +8,7 @@ from langchain_core.output_parsers import StrOutputParser
 
 # 1. Initialize LLM (Claude 3 Haiku)
 llm = ChatBedrock(
-    model_id="deepseek.v3.2",
+    model_id="anthropic.claude-haiku-4-5-20251001-v1:0",
     client=None,
     model_kwargs={"max_tokens": 1024, "temperature": 0.1}
 )
