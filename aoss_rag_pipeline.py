@@ -6,7 +6,7 @@ from langfuse import Langfuse, observe
 from langfuse.langchain import CallbackHandler
 from langchain_aws import ChatBedrock, BedrockEmbeddings
 # Notice the updated import path to remove the DeprecationWarning
-from langchain_opensearch import OpenSearchVectorSearch
+from langchain_community.vectorstores import OpenSearchVectorSearch
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
 
